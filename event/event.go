@@ -2,7 +2,6 @@ package event
 
 import (
 	"code.google.com/p/go-uuid/uuid"
-	logger "github.com/alecthomas/log4go"
 )
 
 type EventType string
@@ -36,14 +35,15 @@ type Emitter interface {
 	On(eventName EventType, callback Callback) (identity string)
 	Once(eventName EventType) (identity string, event <-chan Event)
 	Subscribe(eventName EventType) (identity string, event <-chan Event)
-	UnSubscribe(identity string)
-	Emit(event Event)
+	UnSubscribe(identity ...string)
+	UnSubscribeAll()
+	Emit(event ...Event)
 }
 
 func NewEmitter(eventBufSize int) Emitter {
 	emitter := new(eventEmitter)
 	emitter.hub = make(map[EventType]*broadcaster)
-	emitter.listener = make(chan Event)
+	emitter.eventListener = make(chan Event)
 	emitter.observer = make(chan subscriber)
 	if eventBufSize <= 0 {
 		eventBufSize = 256
@@ -54,16 +54,16 @@ func NewEmitter(eventBufSize int) Emitter {
 }
 
 type eventEmitter struct {
-	hub          map[EventType]*broadcaster
-	listener     chan Event
-	observer     chan subscriber
-	eventBufSize int
+	hub           map[EventType]*broadcaster
+	eventListener chan Event
+	observer      chan subscriber
+	eventBufSize  int
 }
 
 func (e *eventEmitter) dispatch() {
 	for {
 		select {
-		case event := <-e.listener:
+		case event := <-e.eventListener:
 			if b, ok := e.hub[event.GetType()]; ok {
 				b.broadcast(event)
 			}
@@ -77,16 +77,23 @@ func (e *eventEmitter) dispatch() {
 					b.pipeline = make(chan Event)
 					b.observer = make(chan subscriber)
 					b.eventBufSize = e.eventBufSize
+					b.emitter = e
 					go b.start()
 					e.hub[suber.eventName] = b
 				}
 				b.dealRegister(suber)
 			case unSubscribe:
-				for _, b := range e.hub {
-					go b.dealRegister(suber)
-				}
+				e.unSubscribe(suber)
+			case unSubscribeAll:
+				e.unSubscribe(suber)
 			}
 		}
+	}
+}
+
+func (e *eventEmitter) unSubscribe(suber subscriber) {
+	for _, b := range e.hub {
+		go b.dealRegister(suber)
 	}
 }
 
@@ -129,24 +136,35 @@ func (e *eventEmitter) doSubscribe(eventName EventType, subType subscribeType, c
 	}
 }
 
-func (e *eventEmitter) UnSubscribe(identity string) {
-	e.observer <- subscriber{
-		identity:        identity,
-		subscribeAction: unSubscribe,
+func (e *eventEmitter) UnSubscribe(identities ...string) {
+	for _, identity := range identities {
+		e.observer <- subscriber{
+			identity:        identity,
+			subscribeAction: unSubscribe,
+		}
 	}
 }
 
-func (e *eventEmitter) Emit(event Event) {
-	e.listener <- event
+func (e *eventEmitter) UnSubscribeAll() {
+	e.observer <- subscriber{
+		subscribeAction: unSubscribeAll,
+	}
+}
+
+func (e *eventEmitter) Emit(events ...Event) {
+	for _, event := range events {
+		e.eventListener <- event
+	}
 }
 
 type subscribeType string
 
 const (
-	fireOnce    subscribeType = "fireOnce"
-	fireAllways subscribeType = "fireAllways"
-	subscribe   EventType     = "subscribe"
-	unSubscribe EventType     = "unSubscribe"
+	fireOnce       subscribeType = "fireOnce"
+	fireAllways    subscribeType = "fireAllways"
+	subscribe      EventType     = "subscribe"
+	unSubscribe    EventType     = "unSubscribe"
+	unSubscribeAll EventType     = "unSubscribeAll"
 )
 
 type subscriber struct {
@@ -164,46 +182,80 @@ type broadcaster struct {
 	pipeline     chan Event
 	observer     chan subscriber
 	eventBufSize int
+	emitter      *eventEmitter
 }
 
 func (b *broadcaster) start() {
 	for {
 		select {
 		case e := <-b.pipeline:
-			logger.Debug("Received event: %s", e.GetType())
-			for identity, suber := range b.subers {
-				if suber.subscribeType == fireOnce {
-					delete(b.subers, identity)
-				}
-
-				if suber.callback != nil {
-					go suber.callback(e)
-				} else {
-					suber.event <- e
-				}
-
-				if suber.subscribeType == fireOnce {
-					close(suber.event)
-				}
-			}
+			b.processEvent(e)
 		case suber := <-b.observer:
 			switch suber.subscribeAction {
 			case subscribe:
-				if suber.subscribeType == fireAllways {
-					suber.event = make(chan Event, b.eventBufSize)
-				} else {
-					suber.event = make(chan Event)
-				}
-				suber.response <- suber.event
-				close(suber.response)
-				b.subers[suber.identity] = suber
+				b.processSubscribe(suber)
 			case unSubscribe:
-				if s, ok := b.subers[suber.identity]; ok {
-					close(s.event)
-				}
-				delete(b.subers, suber.identity)
+				b.processUnSubscribe(suber)
+			case unSubscribeAll:
+				b.processUnSubscribeAll(suber)
 			}
 		}
+	}
+}
+
+func (b *broadcaster) processEvent(event Event) {
+	for identity, suber := range b.subers {
+		if suber.subscribeType == fireOnce {
+			delete(b.subers, identity)
+			b.checkEmpty(suber.eventName)
+		}
+
+		if suber.callback != nil {
+			go suber.callback(event)
+		} else {
+			suber.event <- event
+		}
+
+		if suber.subscribeType == fireOnce {
+			close(suber.event)
+		}
+	}
+}
+
+func (b *broadcaster) processSubscribe(suber subscriber) {
+	if suber.subscribeType == fireAllways {
+		suber.event = make(chan Event, b.eventBufSize)
+	} else {
+		suber.event = make(chan Event)
+	}
+	suber.response <- suber.event
+	close(suber.response)
+	b.subers[suber.identity] = suber
+}
+
+func (b *broadcaster) processUnSubscribe(suber subscriber) {
+	if s, ok := b.subers[suber.identity]; ok {
+		delete(b.subers, suber.identity)
+		close(s.event)
+		b.checkEmpty(s.eventName)
+	}
+}
+
+func (b *broadcaster) processUnSubscribeAll(suber subscriber) {
+	for id, suber := range b.subers {
+		if suber.subscribeType == fireAllways && suber.callback == nil {
+			close(suber.event)
+		}
+		delete(b.subers, id)
+		b.checkEmpty(suber.eventName)
+	}
+}
+
+func (b *broadcaster) checkEmpty(eventType EventType) {
+	if len(b.subers) == 0 {
+		//clean the parent event type
+		//will error?
+		delete(b.emitter.hub, eventType)
 	}
 }
 
