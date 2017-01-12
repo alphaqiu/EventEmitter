@@ -4,45 +4,61 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 )
 
-type EventType string
+//Type Event type. you can define custom event type
+//Please don`t overide the following interal event type:
+// subscribe Type = "subscribe"
+// unSubscribe Type = "unSubscribe"
+// unSubscribeAll Type = "unSubscribeAll"
+type Type string
+
+//Event ...
 type Event interface {
-	GetType() EventType
+	GetType() Type
 	GetMetaData() []byte
 	GetData() []byte
 }
 
+//GenericEvent ...
 type GenericEvent struct {
-	EventType EventType
-	Meta      []byte
-	Data      []byte
+	Type Type
+	Meta []byte
+	Data []byte
 }
 
-func (e GenericEvent) GetType() EventType {
-	return e.EventType
+//GetType ...
+func (e GenericEvent) GetType() Type {
+	return e.Type
 }
 
+//GetMetaData ...
 func (e GenericEvent) GetMetaData() []byte {
 	return e.Meta
 }
 
+//GetData ...
 func (e GenericEvent) GetData() []byte {
 	return e.Data
 }
 
+//Callback ...
 type Callback func(event Event)
 
+//Emitter ...
 type Emitter interface {
-	On(eventName EventType, callback Callback) (identity string)
-	Once(eventName EventType) (identity string, event <-chan Event)
-	Subscribe(eventName EventType) (identity string, event <-chan Event)
+	On(eventName Type, callback Callback) (identity string)
+	Once(eventName Type) (identity string, event <-chan Event)
+	Subscribe(eventName Type) (identity string, event <-chan Event)
 	UnSubscribe(identity ...string)
 	UnSubscribeAll()
 	Emit(event ...Event)
 }
 
+//NewEmitter ...
+// one event boardcast to multiple subscribers
+// when unsubscribe event, the channel sending event will automate be closed
 func NewEmitter(eventBufSize int) Emitter {
 	emitter := new(eventEmitter)
-	emitter.hub = make(map[EventType]*broadcaster)
+	emitter.hub = make(map[Type]*broadcaster)
 	emitter.eventListener = make(chan Event)
 	emitter.observer = make(chan subscriber)
 	if eventBufSize <= 0 {
@@ -54,7 +70,7 @@ func NewEmitter(eventBufSize int) Emitter {
 }
 
 type eventEmitter struct {
-	hub           map[EventType]*broadcaster
+	hub           map[Type]*broadcaster
 	eventListener chan Event
 	observer      chan subscriber
 	eventBufSize  int
@@ -97,20 +113,20 @@ func (e *eventEmitter) unSubscribe(suber subscriber) {
 	}
 }
 
-func (e *eventEmitter) On(eventName EventType, callback Callback) (identity string) {
+func (e *eventEmitter) On(eventName Type, callback Callback) (identity string) {
 	identity, _ = e.doSubscribe(eventName, fireAllways, callback)
 	return
 }
 
-func (e *eventEmitter) Once(eventName EventType) (string, <-chan Event) {
+func (e *eventEmitter) Once(eventName Type) (string, <-chan Event) {
 	return e.doSubscribe(eventName, fireOnce, nil)
 }
 
-func (e *eventEmitter) Subscribe(eventName EventType) (string, <-chan Event) {
+func (e *eventEmitter) Subscribe(eventName Type) (string, <-chan Event) {
 	return e.doSubscribe(eventName, fireAllways, nil)
 }
 
-func (e *eventEmitter) doSubscribe(eventName EventType, subType subscribeType, callback Callback) (string, <-chan Event) {
+func (e *eventEmitter) doSubscribe(eventName Type, subType subscribeType, callback Callback) (string, <-chan Event) {
 	identity := uuid.New()
 	response := make(chan chan Event)
 
@@ -131,9 +147,9 @@ func (e *eventEmitter) doSubscribe(eventName EventType, subType subscribeType, c
 	if callback != nil {
 		close(event)
 		return identity, nil
-	} else {
-		return identity, event
 	}
+
+	return identity, event
 }
 
 func (e *eventEmitter) UnSubscribe(identities ...string) {
@@ -162,17 +178,17 @@ type subscribeType string
 const (
 	fireOnce       subscribeType = "fireOnce"
 	fireAllways    subscribeType = "fireAllways"
-	subscribe      EventType     = "subscribe"
-	unSubscribe    EventType     = "unSubscribe"
-	unSubscribeAll EventType     = "unSubscribeAll"
+	subscribe Type = "subscribe"
+	unSubscribe Type = "unSubscribe"
+	unSubscribeAll Type = "unSubscribeAll"
 )
 
 type subscriber struct {
 	identity        string
 	callback        Callback
-	eventName       EventType
+	eventName       Type
 	subscribeType   subscribeType
-	subscribeAction EventType
+	subscribeAction Type
 	response        chan chan Event
 	event           chan Event
 }
@@ -251,7 +267,7 @@ func (b *broadcaster) processUnSubscribeAll(suber subscriber) {
 	}
 }
 
-func (b *broadcaster) checkEmpty(eventType EventType) {
+func (b *broadcaster) checkEmpty(eventType Type) {
 	if len(b.subers) == 0 {
 		//clean the parent event type
 		//will error?
