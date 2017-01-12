@@ -7,18 +7,18 @@ package main
 
 import (
 	"fmt"
-	"alpha.co/eventemitter"
+	"git.oschina.net/octopus/EventEmitter/event"
 	"sync"
 	"time"
 )
 
 const (
-	fireEvent eventemitter.EventType = "fire"
+	fireEvent event.EventType = "fire"
 )
 
 func main() {
 
-	emitter := eventemitter.NewEmitter(2)
+	emitter := event.NewEmitter(2)
 
 	c := make(chan string, 1)
 	go func() {
@@ -64,7 +64,7 @@ func main() {
 			}
 
 			time.Sleep(2 * time.Millisecond)
-			event := eventemitter.GenericEvent{
+			event := event.GenericEvent{
 				EventType: fireEvent,
 				Data: []byte(fmt.Sprintf("fire in the hole %d", counter)),
 			}
@@ -79,14 +79,14 @@ func main() {
 	time.Sleep(5 * time.Second)
 }
 
-func doEvent() eventemitter.Callback {
-	ch := make(chan eventemitter.Event)
+func doEvent() event.Callback {
+	ch := make(chan event.Event)
 	go func() {
 		for e := range ch {
 			fmt.Printf("device 3: %s\n", e.GetData())
 		}
 	}()
-	return func(event eventemitter.Event){
+	return func(event event.Event){
 		ch <- event
 	}
 }
