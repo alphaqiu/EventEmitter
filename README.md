@@ -7,7 +7,7 @@ package main
 
 import (
 	"fmt"
-	"git.oschina.net/octopus/EventEmitter/event"
+	"github.com/alphaqiu/EventEmitter/event"
 	"sync"
 	"time"
 )
