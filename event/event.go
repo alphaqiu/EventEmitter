@@ -1,4 +1,4 @@
-package utils
+package event
 
 import (
 	"code.google.com/p/go-uuid/uuid"
@@ -108,12 +108,12 @@ func (e *eventEmitter) doSubscribe(eventName EventType, subType subscribeType, c
 	response := make(chan chan Event)
 
 	e.observer <- subscriber{
-		identity: identity,
-		callback: callback,
+		identity:        identity,
+		callback:        callback,
 		subscribeAction: subscribe,
-		eventName: eventName,
-		subscribeType: subType,
-		response: response,
+		eventName:       eventName,
+		subscribeType:   subType,
+		response:        response,
 	}
 
 	event, ok := <-response
@@ -131,7 +131,7 @@ func (e *eventEmitter) doSubscribe(eventName EventType, subType subscribeType, c
 
 func (e *eventEmitter) UnSubscribe(identity string) {
 	e.observer <- subscriber{
-		identity: identity,
+		identity:        identity,
 		subscribeAction: unSubscribe,
 	}
 }
@@ -143,10 +143,10 @@ func (e *eventEmitter) Emit(event Event) {
 type subscribeType string
 
 const (
-	fireOnce subscribeType = "fireOnce"
+	fireOnce    subscribeType = "fireOnce"
 	fireAllways subscribeType = "fireAllways"
-	subscribe EventType = "subscribe"
-	unSubscribe EventType = "unSubscribe"
+	subscribe   EventType     = "subscribe"
+	unSubscribe EventType     = "unSubscribe"
 )
 
 type subscriber struct {
@@ -160,9 +160,9 @@ type subscriber struct {
 }
 
 type broadcaster struct {
-	subers   map[string]subscriber
-	pipeline chan Event
-	observer chan subscriber
+	subers       map[string]subscriber
+	pipeline     chan Event
+	observer     chan subscriber
 	eventBufSize int
 }
 
