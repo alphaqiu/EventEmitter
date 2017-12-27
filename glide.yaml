@@ -1,0 +1,5 @@
+package: github.com/alphaqiu/EventEmitter
+import:
+- package: code.google.com/p/go-uuid
+  subpackages:
+  - uuid
