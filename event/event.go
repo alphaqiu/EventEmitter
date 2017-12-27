@@ -1,7 +1,7 @@
 package event
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/google/uuid"
 )
 
 //Type Event type. you can define custom event type
@@ -131,7 +131,7 @@ func (e *eventEmitter) doSubscribe(eventName Type, subType subscribeType, callba
 	response := make(chan chan Event)
 
 	e.observer <- subscriber{
-		identity:        identity,
+		identity:        identity.String(),
 		callback:        callback,
 		subscribeAction: subscribe,
 		eventName:       eventName,
@@ -146,10 +146,10 @@ func (e *eventEmitter) doSubscribe(eventName Type, subType subscribeType, callba
 
 	if callback != nil {
 		close(event)
-		return identity, nil
+		return identity.String(), nil
 	}
 
-	return identity, event
+	return identity.String(), event
 }
 
 func (e *eventEmitter) UnSubscribe(identities ...string) {
