@@ -1,6 +1,8 @@
-#EventEmitter
+# EventEmitter
 
-使用举例：
+[![Build Status](https://travis-ci.org/alphaqiu/EventEmitter.svg?branch=master)](https://travis-ci.org/alphaqiu/EventEmitter)
+
+example：
 
 ```go
 package main
