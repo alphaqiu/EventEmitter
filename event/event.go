@@ -178,9 +178,9 @@ type subscribeType string
 const (
 	fireOnce       subscribeType = "fireOnce"
 	fireAllways    subscribeType = "fireAllways"
-	subscribe Type = "subscribe"
-	unSubscribe Type = "unSubscribe"
-	unSubscribeAll Type = "unSubscribeAll"
+	subscribe      Type          = "subscribe"
+	unSubscribe    Type          = "unSubscribe"
+	unSubscribeAll Type          = "unSubscribeAll"
 )
 
 type subscriber struct {
