@@ -1,6 +1,6 @@
 # EventEmitter
 
-[![Build Status](https://travis-ci.org/alphaqiu/EventEmitter.svg?branch=master)](https://travis-ci.org/alphaqiu/EventEmitter)
+[![Build Status](https://travis-ci.org/alphaqiu/EventEmitter.svg?branch=master)](https://travis-ci.org/alphaqiu/EventEmitter) [![Coverage Status](https://coveralls.io/repos/github/alphaqiu/EventEmitter/badge.svg?branch=master)](https://coveralls.io/github/alphaqiu/EventEmitter?branch=master)
 
 example：
 
