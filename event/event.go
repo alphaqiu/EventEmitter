@@ -54,7 +54,7 @@ type Emitter interface {
 }
 
 //NewEmitter ...
-// one event boardcast to multiple subscribers
+// one event broadcast to multiple subscribers
 // when unsubscribe event, the channel sending event will automate be closed
 func NewEmitter(eventBufSize int) Emitter {
 	emitter := new(eventEmitter)

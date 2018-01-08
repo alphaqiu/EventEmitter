@@ -25,7 +25,7 @@ func TestOn(t *testing.T) {
 		event.Data = []byte(fmt.Sprintf("fire in the hole %d", i+1))
 		emitter.Emit(event)
 	}
-	t.Log("event emited.")
+	t.Log("event emitted.")
 	wg.Wait()
 	t.Log("Testing finished.")
 }
