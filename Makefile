@@ -11,4 +11,4 @@ dependencies:
 .PHONY: test
 test: dependencies
 	go test -v -covermode=count -coverprofile=coverage.out github.com/alphaqiu/EventEmitter/event
-	goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+	goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
