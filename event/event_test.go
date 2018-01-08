@@ -1,9 +1,9 @@
 package event
 
 import (
-	"testing"
 	"fmt"
 	"sync"
+	"testing"
 )
 
 const (
@@ -38,7 +38,7 @@ func response(wg *sync.WaitGroup, t *testing.T) Callback {
 		}
 	}()
 
-	return func(event Event){
+	return func(event Event) {
 		ch <- event
 		wg.Done()
 	}
