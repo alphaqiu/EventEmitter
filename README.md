@@ -1,6 +1,6 @@
 # EventEmitter
 
-[![Build Status](https://travis-ci.org/alphaqiu/EventEmitter.svg?branch=master)](https://travis-ci.org/alphaqiu/EventEmitter) [![Coverage Status](https://coveralls.io/repos/github/alphaqiu/EventEmitter/badge.svg?branch=master)](https://coveralls.io/github/alphaqiu/EventEmitter?branch=master) [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Build Status](https://travis-ci.org/alphaqiu/EventEmitter.svg?branch=master)](https://travis-ci.org/alphaqiu/EventEmitter) [![Coverage Status](https://coveralls.io/repos/github/alphaqiu/EventEmitter/badge.svg?branch=master)](https://coveralls.io/github/alphaqiu/EventEmitter?branch=master) [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![language](https://img.shields.io/badge/golang-%5E1.5-blue.svg)]()
 
 example：
 
