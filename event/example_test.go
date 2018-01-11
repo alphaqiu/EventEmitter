@@ -1,3 +1,6 @@
+// Copyright (c) 2018 alpha. All rights reserved.
+// Use of this source code is governed by a Apache License Version 2.0 found in the LICENSE file.
+
 package event
 
 import (
@@ -68,7 +71,6 @@ func Example_newEmitter() {
 		}
 	}()
 
-
 	wg.Wait()
 	time.Sleep(5 * time.Second)
 }
@@ -80,7 +82,7 @@ func doEvent() Callback {
 			fmt.Printf("device 3: %s\n", e.GetData())
 		}
 	}()
-	return func(event Event){
+	return func(event Event) {
 		ch <- event
 	}
 }

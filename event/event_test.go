@@ -1,3 +1,6 @@
+// Copyright (c) 2018 alpha. All rights reserved.
+// Use of this source code is governed by a Apache License Version 2.0 found in the LICENSE file.
+
 package event
 
 import (
